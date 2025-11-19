@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Snake</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Snake</h1>
+      <div class="controls">
+        <span id="score">Score: 0</span>
+      </div>
+    </header>
+    <main>
+      <canvas id="gameCanvas" width="400" height="400" aria-label="Snake game"></canvas>
+      <div id="overlay">
+        <!-- Pre-start content (shown when game hasn't started) -->
+        <div id="preStart" class="overlay-content">
+          <h2>Press WASD or Arrow keys to start</h2>
+          <p class="hint">Use arrow keys or WASD to move. Press Space or Esc to pause.</p>
+        </div>
+
+        <!-- Game over content (shown when the player loses) -->
+        <div id="gameOver" class="overlay-content hidden">
+          <h2 id="overlayTitle">Game Over</h2>
+          <p id="overlayScore">Score: 0</p>
+          <button id="overlayRestart">Restart</button>
+        </div>
+
+        <!-- Pause menu: slider acts as a multiplier of the base speed defined in code -->
+        <div id="pauseMenu" class="overlay-content hidden">
+          <h2>Paused</h2>
+          <div class="speed-control">
+            <label for="speedRange">Speed ×</label>
+            <!-- multiplier slider: editing allowed in code for base speed -->
+            <input id="speedRange" type="range" min="0.25" max="3" step="0.05" value="1" />
+            <span id="speedValue">1.00</span>
+          </div>
+          <p class="hint">This slider multiplies the base speed set in the code. Resume to apply.</p>
+          <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+            <button id="resumeBtn">Resume</button>
+            <button id="overlayRestart2">Restart</button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <p>Use arrow keys or WASD to move.</p>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

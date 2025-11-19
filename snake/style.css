@@ -1,0 +1,183 @@
+/*
+	style.css
+	A readable, commented stylesheet for the Snake game.
+	Sections:
+		- Base / resets
+		- Layout (container, header, footer)
+		- Canvas styling
+		- Overlay styles (pre-start and game-over)
+		- Controls (speed slider)
+		- Responsive tweaks
+*/
+
+/* ----------------------
+	 Base / reset
+	 ---------------------- */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	/* Clean, dark background for good contrast with the snake */
+	font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif;
+	background: #0f1724; /* deep navy */
+	color: #e6eef8;      /* off-white */
+	display: flex;
+	min-height: 100vh;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+}
+
+/* ----------------------
+	 Layout
+	 ---------------------- */
+.container {
+	/* let the container size itself to the canvas; center contents */
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	max-width: 95vw;
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+header h1 {
+	margin: 0;
+	font-size: 20px;
+}
+
+.controls {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+footer {
+	font-size: 12px;
+	margin-top: 8px;
+	color: #9fb4c8; /* muted cyan */
+}
+
+/* ----------------------
+	 Canvas styling
+	 ---------------------- */
+#gameCanvas {
+	display: block;
+	background: #071021;          /* darker background for game area */
+	border: 4px solid #0ea5a4;    /* teal border to give contrast */
+	border-radius: 8px;
+}
+
+#main, main {
+	/* make the main area a positioned container so the overlay can
+	   be absolutely positioned on top of the canvas and scale with it */
+	position: relative;
+	display: inline-block; /* shrink to fit the canvas */
+}
+
+#overlay {
+	/* absolute overlay that covers the canvas area */
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* utility hidden class used throughout the UI */
+.hidden { display: none; }
+
+#overlay.hidden { display: none; }
+
+#overlay.hidden {
+	display: none;
+}
+
+.overlay-content {
+	background: rgba(2, 6, 23, 0.95); /* slightly transparent dark card */
+	padding: 18px;
+	border-radius: 8px;
+	border: 1px solid rgba(14, 165, 164, 0.12);
+	text-align: center;
+	min-width: 260px;
+}
+
+.overlay-content h2 {
+	margin: 0 0 8px 0;
+}
+
+.overlay-content p {
+	margin: 4px 0 12px 0;
+}
+
+.overlay-content .hint {
+	font-size: 12px;
+	color: #9fb4c8;
+	margin-top: 8px;
+}
+
+/* ----------------------
+	 Speed control (slider) styles
+	 - small, centered controls inside the overlay
+	 ---------------------- */
+.speed-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	justify-content: center;
+	margin-top: 8px;
+}
+
+.speed-control label {
+	font-size: 13px;
+}
+
+/* make the range input comfortably wide */
+.speed-control input[type=range] {
+	width: 140px;
+}
+
+.speed-control #speedValue {
+	min-width: 20px;
+	display: inline-block;
+	text-align: center;
+}
+
+/* Button styles (for restart button on game-over) */
+button {
+	background: #0ea5a4;
+	color: #042a2a;
+	border: none;
+	padding: 6px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+button:active {
+	transform: translateY(1px);
+}
+
+/* ----------------------
+	 Small screens
+	 ---------------------- */
+@media (max-width: 480px) {
+	.container {
+		width: 320px;
+	}
+
+	#gameCanvas {
+		width: 320px;
+		height: 320px;
+	}
+}

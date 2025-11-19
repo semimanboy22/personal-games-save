@@ -53,7 +53,7 @@ let speedMultiplier = 1.5;
 // -----------------------------
 // Change how many apples spawn after you eat one by editing APPLES_ON_EAT.
 // For example, set APPLES_ON_EAT = 2 to spawn two new apples whenever you eat one.
-const APPLES_ON_EAT = 1; // default: spawn 1 new apple after eating
+const APPLES_ON_EAT = 100; // default: spawn 1 new apple after eating
 
 // Game state
 let snake = []; // array of segments {x,y}, head is snake[0]
@@ -118,6 +118,45 @@ function draw() {
   for (let i = 0; i < snake.length; i++) {
     const s = snake[i];
     drawCell(s.x, s.y, i === 0 ? '#34d399' : '#10b981');
+  }
+
+  // draw two small black square "eyes" on the head so player knows facing
+  // direction. Eyes are placed relative to `dir` so they appear on the
+  // leading edge of the head segment.
+  if (snake.length > 0) {
+    const head = snake[0];
+    const eyeSize = Math.max(2, Math.floor(SCALE * 0.18));
+    ctx.fillStyle = '#000';
+
+    if (dir.x === 1) {
+      // facing right: eyes on the right side (top and bottom)
+      const ex = head.x * SCALE + SCALE - eyeSize - 2;
+      const ey1 = head.y * SCALE + Math.floor(SCALE * 0.25);
+      const ey2 = head.y * SCALE + Math.floor(SCALE * 0.65);
+      ctx.fillRect(ex, ey1, eyeSize, eyeSize);
+      ctx.fillRect(ex, ey2, eyeSize, eyeSize);
+    } else if (dir.x === -1) {
+      // facing left: eyes on the left side
+      const ex = head.x * SCALE + 2;
+      const ey1 = head.y * SCALE + Math.floor(SCALE * 0.25);
+      const ey2 = head.y * SCALE + Math.floor(SCALE * 0.65);
+      ctx.fillRect(ex, ey1, eyeSize, eyeSize);
+      ctx.fillRect(ex, ey2, eyeSize, eyeSize);
+    } else if (dir.y === 1) {
+      // facing down: eyes on bottom side (left and right)
+      const ey = head.y * SCALE + SCALE - eyeSize - 2;
+      const ex1 = head.x * SCALE + Math.floor(SCALE * 0.25);
+      const ex2 = head.x * SCALE + Math.floor(SCALE * 0.65);
+      ctx.fillRect(ex1, ey, eyeSize, eyeSize);
+      ctx.fillRect(ex2, ey, eyeSize, eyeSize);
+    } else if (dir.y === -1) {
+      // facing up: eyes on top side
+      const ey = head.y * SCALE + 2;
+      const ex1 = head.x * SCALE + Math.floor(SCALE * 0.25);
+      const ex2 = head.x * SCALE + Math.floor(SCALE * 0.65);
+      ctx.fillRect(ex1, ey, eyeSize, eyeSize);
+      ctx.fillRect(ex2, ey, eyeSize, eyeSize);
+    }
   }
 }
 

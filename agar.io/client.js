@@ -6,6 +6,7 @@
   function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; width = canvas.width; height = canvas.height; }
   window.addEventListener('resize', resize);
   resize();
+  let cameraScale = 1;
 
   // UI elements
   const menu = document.getElementById('menu');
@@ -23,7 +24,11 @@
   const WORLD_W = 5000, WORLD_H = 5000;
   const foods = [];
   function spawnFood(n){ for(let i=0;i<n;i++) foods.push({x:Math.random()*WORLD_W,y:Math.random()*WORLD_H,id:Math.random().toString(36).slice(2)}); }
-  spawnFood(600);
+  // Edit this value to change how much food should exist on the map.
+  // Increase to spawn more food persistently; decrease to lower density.
+  // Keep in mind very large values (thousands) will increase CPU/render cost.
+  let TARGET_FOOD_COUNT = 12600; // <-- change this number to the desired total food on the map
+  spawnFood(TARGET_FOOD_COUNT);
 
   // Entities
   class Cell { constructor(x,y,mass,color,name,isPlayer=false){ this.x=x;this.y=y;this.mass=mass;this.vx=0;this.vy=0;this.color=color;this.name=name;this.canMergeAt=Date.now()+1000;this.invulnerableUntil=0;this.isPlayer=isPlayer } radius(){ return Math.max(6, Math.sqrt(this.mass)*6) } }
@@ -111,11 +116,29 @@
   }
   startBtn.addEventListener('click', startGame);
 
-  function worldToScreen(wx,wy,me){ return { x: wx - me.cells[0].x + width/2, y: wy - me.cells[0].y + height/2 } }
+  function worldToScreen(wx,wy,me){
+    const cx = me.cells[0].x;
+    const cy = me.cells[0].y;
+    return {
+      x: (wx - cx) * cameraScale + width/2,
+      y: (wy - cy) * cameraScale + height/2
+    };
+  }
 
   function tick(ts){ const dt = Math.min(40, ts-last); last = ts;
     // update targets
     if(player){ const mx = player.cells[0].x - width/2 + mouse.x; const my = player.cells[0].y - height/2 + mouse.y; player.target={x:mx,y:my} }
+    // compute camera scale so the player's largest cell never exceeds 40% of screen height
+    if(player && player.cells && player.cells.length){
+      const largestRadius = Math.max(...player.cells.map(c=>c.radius()));
+      // desired scale such that diameter (2*radius*scale) <= 0.4 * height
+      const desired = (0.4 * height) / (2 * largestRadius || 1);
+      // only zoom out (scale <= 1). Prevent extreme tiny scales by clamping a minimum.
+      cameraScale = Math.min(1, desired);
+      cameraScale = Math.max(0.08, cameraScale);
+    } else {
+      cameraScale = 1;
+    }
     // AI behavior (improved): avoid invulnerable players and flee big players
     const now = Date.now();
     for(const b of bots){
@@ -251,8 +274,29 @@
     // merge same-player cells
     for(const e of entities){ if(e.cells.length<=1) continue; let merged=false; for(let i=0;i<e.cells.length && !merged;i++){ for(let j=i+1;j<e.cells.length && !merged;j++){ const a=e.cells[i], b=e.cells[j]; if(Date.now()<a.canMergeAt||Date.now()<b.canMergeAt) continue; const d=Math.hypot(a.x-b.x,a.y-b.y); if(d< a.radius()*0.6 + b.radius()*0.6){ a.mass+=b.mass; a.vx=(a.vx+b.vx)/2; a.vy=(a.vy+b.vy)/2; e.cells.splice(j,1); merged=true; } } } }
 
-    // respawn food
-    while(foods.length<600) spawnFood(20);
+    // respawn food policy (spread recovery):
+    // - keep the total near TARGET_FOOD_COUNT
+    // - if current food is below 80% of target, recover faster by spawning a fraction
+    //   of the deficit each frame (so recovery is spread across multiple frames)
+    // - otherwise top up slowly (small steady chunks)
+    // - if the target is lowered, immediately trim the extra food
+    const MIN_KEEP_RATIO = 0.8; // keep at least 80% available
+    if (foods.length > TARGET_FOOD_COUNT) {
+      // trim extra food immediately if someone lowered the target
+      foods.splice(TARGET_FOOD_COUNT);
+    } else if (foods.length < TARGET_FOOD_COUNT) {
+      const deficit = TARGET_FOOD_COUNT - foods.length;
+      const threshold = Math.floor(TARGET_FOOD_COUNT * MIN_KEEP_RATIO);
+      if (foods.length < threshold) {
+        // below threshold: spawn a recovery chunk proportional to the deficit
+        // spawn ~10% of the deficit per tick, clamped between 20 and 200
+        const recoveryChunk = Math.min(200, Math.max(20, Math.ceil(deficit * 0.10)));
+        spawnFood(recoveryChunk);
+      } else {
+        // small steady top-up to close small gaps without hitches
+        spawnFood(Math.min(20, deficit));
+      }
+    }
 
     // mode rules
     if(mode==='battle'){ safeZone.r = Math.max(80, safeZone.r - 0.02 * dt); }
@@ -284,14 +328,14 @@
     // draw safe zone for battle
     const me = player;
     // foods
-    for(const f of foods){ const s = worldToScreen(f.x,f.y,me); if(s.x< -10||s.y<-10||s.x>width+10||s.y>height+10) continue; ctx.fillStyle='#7fff66'; ctx.beginPath(); ctx.arc(s.x,s.y,4,0,Math.PI*2); ctx.fill() }
+    for(const f of foods){ const s = worldToScreen(f.x,f.y,me); const fr = Math.max(1, 4 * cameraScale); if(s.x< -fr||s.y<-fr||s.x>width+fr||s.y>height+fr) continue; ctx.fillStyle='#7fff66'; ctx.beginPath(); ctx.arc(s.x,s.y,fr,0,Math.PI*2); ctx.fill() }
     // players and bots
     const all=[player,...bots];
-    for(const p of all){ for(const c of p.cells){ const s = worldToScreen(c.x,c.y,me); const r = c.radius(); if(s.x < -r || s.y < -r || s.x > width+r || s.y > height+r) continue; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2); ctx.fill(); if(p.isIt){ ctx.strokeStyle='#ffff00'; ctx.lineWidth=3; ctx.stroke(); } } // names
-      const base = p.cells[0]; const sb = worldToScreen(base.x,base.y,me); ctx.fillStyle='#fff'; ctx.font='12px sans-serif'; ctx.fillText(p.name || 'Bot', sb.x-20, sb.y - base.radius() - 8);
+    for(const p of all){ for(const c of p.cells){ const s = worldToScreen(c.x,c.y,me); const r = c.radius(); const sr = Math.max(2, r * cameraScale); if(s.x < -sr || s.y < -sr || s.x > width+sr || s.y > height+sr) continue; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(s.x,s.y,sr,0,Math.PI*2); ctx.fill(); if(p.isIt){ ctx.strokeStyle='#ffff00'; ctx.lineWidth=Math.max(1, 3 * cameraScale); ctx.stroke(); } } // names
+      const base = p.cells[0]; const sb = worldToScreen(base.x,base.y,me); ctx.fillStyle='#fff'; ctx.font='12px sans-serif'; ctx.fillText(p.name || 'Bot', sb.x-20, sb.y - Math.max(10, base.radius()*cameraScale) - 8);
     }
     // safe zone overlay
-    if(mode==='battle'){ const s = worldToScreen(safeZone.x, safeZone.y, me); ctx.beginPath(); ctx.strokeStyle='rgba(0,200,255,0.2)'; ctx.lineWidth=4; ctx.arc(s.x,s.y, safeZone.r,0,Math.PI*2); ctx.stroke(); }
+    if(mode==='battle'){ const s = worldToScreen(safeZone.x, safeZone.y, me); ctx.beginPath(); ctx.strokeStyle='rgba(0,200,255,0.2)'; ctx.lineWidth=Math.max(1, 4 * cameraScale); ctx.arc(s.x,s.y, safeZone.r * cameraScale,0,Math.PI*2); ctx.stroke(); }
   }
 
   // start info

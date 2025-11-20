@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Agar - Offline</title>
+        <style>
+            html,body{height:100%;margin:0;padding:0;background:#111;color:#fff;font-family:sans-serif}
+            #canvasWrap{position:fixed;inset:0}
+            canvas{width:100%;height:100%;display:block}
+            #menu{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);padding:20px;border-radius:8px;min-width:320px}
+            #menu input,#menu select,#menu button{width:100%;margin-top:8px;padding:8px;border-radius:4px;border:1px solid #333;background:#111;color:#fff}
+            #hud{position:fixed;left:10px;top:10px;color:#fff;z-index:3}
+            #modeInfo{position:fixed;right:10px;top:10px;color:#fff;z-index:3}
+            /* Leaderboard */
+            #leaderboard{position:fixed;right:10px;top:60px;width:200px;background:rgba(0,0,0,0.6);padding:8px;border-radius:6px;color:#fff;z-index:4;font-size:13px;display:none}
+            #leaderboard .lb-entry{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+            #leaderboard .lb-left{display:flex;align-items:center;flex:1;overflow:hidden}
+            #leaderboard .lb-swatch{width:12px;height:12px;border-radius:2px;margin-right:8px;flex:0 0 12px}
+            #leaderboard .lb-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #leaderboard .lb-mass{margin-left:8px;flex:0 0 48px;text-align:right}
+        </style>
+    </head>
+    <body>
+        <div id="canvasWrap"><canvas id="c"></canvas></div>
+
+        <div id="menu">
+            <h2 style="margin:0 0 8px 0">Agar - Offline</h2>
+            <label>Name</label>
+            <input id="nameInput" placeholder="Your name" />
+            <label>Color</label>
+            <input id="colorInput" type="color" value="#66a3ff" />
+            <label>Game Mode</label>
+            <select id="modeSelect">
+                <option value="ffa">FFA</option>
+                <option value="experimental">Experimental</option>
+                <option value="battle">Battle Royale</option>
+                <option value="tag">Tag</option>
+            </select>
+            <label>Bot Count</label>
+            <input id="botCount" type="number" min="1" max="50" value="8" />
+            <button id="startBtn">Start Game</button>
+            <p style="font-size:12px;margin-top:8px;color:#bbb">Controls: Move mouse to aim. Space = split.</p>
+        </div>
+
+        <div id="hud" style="display:none">
+            <div id="playerInfo"></div>
+        </div>
+        <div id="modeInfo" style="display:none"></div>
+        <div id="leaderboard"></div>
+
+        <script src="./client.js"></script>
+    </body>
+</html>
